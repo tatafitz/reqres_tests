@@ -1,18 +1,25 @@
 import pytest
+import os
 import requests
-from datetime import datetime
+from dotenv import load_dotenv
+from pathlib import Path
 
-@pytest.fixture(scope="session")
-def base_url():
-    return "http://127.0.0.1:8000"
+
+ENV_PATH = Path(__file__).parent.parent / ".env"
 
 @pytest.fixture(autouse=True)
-def reset_db(base_url):
-    """Сброс базы данных перед каждым тестом"""
-    # Получаем список всех пользователей
+def load_env():
+    """Загрузка переменных окружения перед каждым тестом"""
+    load_dotenv(ENV_PATH)
+
+@pytest.fixture
+def base_url():
+    """Базовый URL для API"""
+    return os.getenv("BASE_URL")
+
+@pytest.fixture
+def users(base_url):
+    """Получение списка пользователей"""
     response = requests.get(f"{base_url}/api/users")
-    users = response.json()["data"]
-    
-    # Удаляем всех пользователей кроме первых шести (начальных)
-    for user in users[6:]:
-        requests.delete(f"{base_url}/api/users/{user['id']}") 
+    return response.json()
+

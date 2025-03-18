@@ -1,6 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, HttpUrl
 from typing import List, Optional
 from datetime import datetime
+from .pagination import PaginatedResponse
+
+class AppStatus(BaseModel):
+    users: bool
 
 class UserBase(BaseModel):
     name: str
@@ -14,7 +18,7 @@ class User(UserBase):
     email: str
     first_name: str
     last_name: str
-    avatar: str
+    avatar: HttpUrl
     createdAt: datetime
     updatedAt: Optional[datetime] = None
 
@@ -24,9 +28,5 @@ class User(UserBase):
 class UserResponse(BaseModel):
     data: User
 
-class UserListResponse(BaseModel):
-    page: int
-    per_page: int
-    total: int
-    total_pages: int
-    data: List[User] 
+class UserListResponse(PaginatedResponse[User]):
+    pass 
