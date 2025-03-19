@@ -10,6 +10,6 @@ def test_server_available(base_url):
 
 def test_status(base_url):
     """Тест получения статуса сервиса"""
-    response = requests.get(f"{base_url}/api/status") 
+    response = requests.get(f"{base_url}/status") 
     status = AppStatus.model_validate(response.json())
     assert status.users is True 

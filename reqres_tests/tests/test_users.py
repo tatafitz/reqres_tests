@@ -33,12 +33,11 @@ test_users = [
 
 @pytest.mark.parametrize("user", test_users)
 def test_get_single_user(base_url, user):
-    """Тест получения информации о конкретном пользователе"""
+    """Тест получения информации о пользователе"""
     response = requests.get(f"{base_url}/api/users/{user['id']}")
     
     assert response.status_code == 200
     data = response.json()
-    # Проверяем соответствие модели
     user_response = UserResponse.model_validate(data)
     assert user_response.data.id == user["id"]
     assert user_response.data.email == user["email"]
@@ -53,20 +52,83 @@ def test_get_single_user_not_found(base_url, user_id):
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
 
-@pytest.mark.parametrize("user_id, expected_error", [
-    (0, "User ID must be a positive number"),
-    (-1, "User ID must be a positive number"),
-    ("dsgjfh", "type_error")])
+@pytest.mark.parametrize("user_id, expected_error", [(0, "User ID must be a positive number"),
+                                                     (-1, "User ID must be a positive number"),
+                                                     ("dsgjfh", "type_error")])
 def test_get_single_user_invalid_id(base_url, user_id, expected_error):
     """Проверка получения ошибки 422 при невалидном ID пользователя"""
     response = requests.get(f"{base_url}/api/users/{user_id}")
 
     assert response.status_code == 422
-
+    error_detail = response.json()
     if expected_error == "type_error":
-        assert "input should be a valid integer" in response.json()["detail"][0]["msg"].lower()
+        assert isinstance(error_detail, dict)
+        assert isinstance(error_detail.get("detail"), list)
+        assert len(error_detail["detail"]) > 0
+        assert "Input should be a valid integer, unable to parse string as an integer" in error_detail["detail"][0]["msg"]
     else:
-        assert response.json()["detail"] == expected_error
+        assert error_detail["detail"] == expected_error
+
+@pytest.mark.parametrize("page,size", [
+    (1, 3),   # Обычная страница
+    (2, 3),   # Обычная страница
+    (5, 3),   # Последняя страница (с остатком)
+    (6, 3),   # Страница после последней (пустая)
+    (1, 5),   # Обычная страница
+    (3, 5)    # Последняя страница (с остатком)
+])
+def test_list_users_pagination(base_url, page, size):
+    """Тест пагинации списка пользователей"""
+    total = len(users_db)
+    response = requests.get(f"{base_url}/api/users", params={"page": page, "size": size})
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    total_pages = (total + size - 1) // size
+    
+    if page > total_pages:
+        assert len(data["items"]) == 0
+    elif page == total_pages:
+        expected_items = total - (page - 1) * size
+        assert len(data["items"]) == expected_items
+    else:
+        assert len(data["items"]) == size
+    
+    assert len(data["items"]) == len(set(item["id"] for item in data["items"]))
+    
+    assert data["page"] == page
+    assert data["size"] == size
+    assert data["total"] == total
+    assert data["pages"] == total_pages
+    
+    if page > 1:
+        prev_response = requests.get(f"{base_url}/api/users", params={"page": page - 1, "size": size})
+        prev_data = prev_response.json()
+        prev_ids = set(item["id"] for item in prev_data["items"])
+        current_ids = set(item["id"] for item in data["items"])
+        assert not prev_ids.intersection(current_ids)
+
+def test_list_users_empty_page(base_url):
+    """Тест запроса без элементов"""
+    total = len(users_db)
+    size = 3
+    empty_page = (total + size - 1) // size + 1
+    
+    response = requests.get(f"{base_url}/api/users", params={"page": empty_page, "size": size})
+    assert response.status_code == 200
+    
+    data = response.json()
+    assert len(data["items"]) == 0
+    assert data["page"] == empty_page
+    assert data["size"] == size
+    assert data["total"] == total
+    assert data["pages"] == (total + size - 1) // size
+
+def test_users_no_duplicates(base_url, users):
+    """Проверка отсутствия дубликатов в списке пользователей"""
+    user_list = users["data"]
+    assert len(user_list) == len(set(user["id"] for user in user_list))
 
 @pytest.mark.parametrize("user_data", [
     {"name": "Иван Петров", "job": "QA инженер"},
@@ -79,7 +141,6 @@ def test_create_user(base_url, user_data):
     
     assert response.status_code == 201
     data = response.json()
-    # Проверяем соответствие модели
     created_user = User.model_validate(data)
     assert created_user.name == user_data["name"]
     assert created_user.job == user_data["job"]
@@ -97,66 +158,10 @@ def test_update_user(base_url, user, update_data):
     
     assert response.status_code == 200
     data = response.json()
-    # Проверяем соответствие модели
     updated_user = User.model_validate(data)
     assert updated_user.name == update_data["name"]
     assert updated_user.job == update_data["job"]
     assert updated_user.updatedAt is not None
-
-@pytest.mark.parametrize("page,size", [
-    (1, 3),  # Первая страница, 3 элемента
-    (2, 3),  # Вторая страница, 3 элемента
-    (4, 3),  # Четвертая страница, 1 элемент
-    (1, 5),  # Первая страница, 5 элементов
-    (2, 5),  # Вторая страница, 5 элементов
-])
-def test_list_users_pagination(base_url, page, size):
-    """Тест пагинации списка пользователей"""
-    response = requests.get(f"{base_url}/api/users", params={"page": page, "size": size})
-    assert response.status_code == 200
-    
-    data = response.json()
-    total = len(users_db)
-    total_pages = (total + size - 1) // size
-    
-    # Проверяем количество элементов на странице
-    assert len(data["items"]) == (total - (page - 1) * size if page == total_pages else size)
-    
-    # Проверяем уникальность данных на странице
-    assert len(data["items"]) == len(set(item["id"] for item in data["items"]))
-    
-    # Проверяем метаданные пагинации
-    assert data["page"] == page
-    assert data["size"] == size
-    assert data["total"] == total  # Используем реальное количество пользователей
-    assert data["pages"] == total_pages  # Правильное количество страниц
-    
-    # Проверяем, что данные на разных страницах разные
-    if page > 1:
-        prev_response = requests.get(f"{base_url}/api/users", params={"page": page - 1, "size": size})
-        prev_data = prev_response.json()
-        assert data["items"] != prev_data["items"]  # Данные должны отличаться
-
-def test_list_users_empty_page(base_url):
-    """Тест запроса страницы, на которой нет элементов"""
-    total = len(users_db)
-    size = 3
-    empty_page = (total + size - 1) // size + 1  # Первая страница после последней
-    
-    response = requests.get(f"{base_url}/api/users", params={"page": empty_page, "size": size})
-    assert response.status_code == 200
-    
-    data = response.json()
-    assert len(data["items"]) == 0  # Страница должна быть пустой
-    assert data["page"] == empty_page
-    assert data["size"] == size
-    assert data["total"] == total
-    assert data["pages"] == (total + size - 1) // size
-
-def test_users_no_duplicates(base_url, users):
-    """Проверка отсутствия дубликатов в списке пользователей"""
-    user_list = users["data"]
-    assert len(user_list) == len(set(user["id"] for user in user_list))
 
 @pytest.mark.parametrize("user", test_users)
 def test_delete_user(base_url, user):

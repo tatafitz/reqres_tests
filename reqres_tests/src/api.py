@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
+from http import HTTPStatus
 from datetime import datetime
 from typing import List, Optional
 from .models import User, UserCreate, UserResponse, UserListResponse
@@ -8,30 +9,28 @@ from dotenv import load_dotenv
 from fastapi_pagination import Page, paginate, add_pagination
 import os
 
-# Загружаем переменные окружения
 load_dotenv()
 
 app = FastAPI()
 
-# Роуты
 @app.get("/api/users/{user_id}", response_model=UserResponse)
 def get_single_user(user_id: int) -> UserResponse:
     """Получение информации о конкретном пользователе"""
     if user_id <= 0:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail="User ID must be a positive number"
         )
     
     user = next((u for u in users_db if u["id"] == user_id), None)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=HTTPStatus.NOT_FOUND,
             detail="User not found"
         )
     return {"data": user}
 
-@app.post("/api/users", response_model=User, status_code=status.HTTP_201_CREATED)
+@app.post("/api/users", response_model=User, status_code=HTTPStatus.CREATED)
 def create_user(user: UserCreate) -> User:
     """Создание нового пользователя"""
     # Разбиваем имя на части
@@ -59,7 +58,7 @@ def create_user(user: UserCreate) -> User:
     users_db.append(new_user)
     return new_user
 
-@app.put("/api/users/{user_id}", response_model=User, status_code=status.HTTP_200_OK)
+@app.put("/api/users/{user_id}", response_model=User, status_code=HTTPStatus.OK)
 def update_user(user_id: int, user: UserCreate) -> User:
     user_index = None
     for current_user in users_db:
@@ -68,7 +67,7 @@ def update_user(user_id: int, user: UserCreate) -> User:
             break
             
     if not user_index:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
     
     # Обновляем данные пользователя
     updated_user = {
@@ -86,7 +85,7 @@ def update_user(user_id: int, user: UserCreate) -> User:
             
     return updated_user
 
-@app.delete("/api/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/api/users/{user_id}", status_code=HTTPStatus.NO_CONTENT)
 def delete_user(user_id: int):
     """Удаление пользователя"""
     user_index = None
@@ -96,7 +95,7 @@ def delete_user(user_id: int):
             break
             
     if not user_index:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
     
     # Находим индекс пользователя в списке для удаления
     for i, current_user in enumerate(users_db):
@@ -117,9 +116,6 @@ def status():
 def root():
     return {"message": "API is running"}
 
-@app.get("/api/status", response_model=AppStatus)
-def api_status():
-    return AppStatus(users=bool(users_db))
 
 # Добавляем пагинацию к приложению
 add_pagination(app)
