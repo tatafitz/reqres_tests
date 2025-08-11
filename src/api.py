@@ -1,13 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from http import HTTPStatus
 from datetime import datetime
-from typing import List, Optional
-from .models import User, UserCreate, UserResponse, UserListResponse
+from .models import User, UserCreate, UserResponse
 from .models.app_status import AppStatus
 from .data import users_db
 from dotenv import load_dotenv
 from fastapi_pagination import Page, paginate, add_pagination
-import os
 
 load_dotenv()
 
@@ -28,7 +26,7 @@ def get_single_user(user_id: int) -> UserResponse:
             status_code=HTTPStatus.NOT_FOUND,
             detail="User not found"
         )
-    return {"data": user}
+    return UserResponse(data=User(**user))
 
 @app.post("/api/users", response_model=User, status_code=HTTPStatus.CREATED)
 def create_user(user: UserCreate) -> User:
@@ -56,7 +54,7 @@ def create_user(user: UserCreate) -> User:
         "updatedAt": datetime.now()
     }
     users_db.append(new_user)
-    return new_user
+    return User(**new_user)
 
 @app.put("/api/users/{user_id}", response_model=User, status_code=HTTPStatus.OK)
 def update_user(user_id: int, user: UserCreate) -> User:
@@ -83,7 +81,7 @@ def update_user(user_id: int, user: UserCreate) -> User:
             users_db[i] = updated_user
             break
             
-    return updated_user
+    return User(**updated_user)
 
 @app.delete("/api/users/{user_id}", status_code=HTTPStatus.NO_CONTENT)
 def delete_user(user_id: int):

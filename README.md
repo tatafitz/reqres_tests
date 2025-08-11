@@ -9,16 +9,24 @@ reqres_tests/
 ├── src/                    # Исходный код API
 │   ├── __init__.py
 │   ├── api.py             # Основной файл с API эндпоинтами
-│   ├── models.py          # Pydantic модели данных
-│   └── data.py            # Начальные данные
+│   ├── data.py            # Начальные данные
+│   └── models/            # Pydantic модели данных
+│       ├── __init__.py
+│       ├── app_status.py
+│       ├── pagination.py
+│       └── users.py
 ├── tests/                  # Тесты
 │   ├── __init__.py
 │   ├── conftest.py        # Конфигурация pytest
+│   ├── test_smoke.py      # Smoke тесты
 │   └── test_users.py      # Тесты для API пользователей
-├── .vscode/               # Настройки VS Code
-├── pytest.ini            # Конфигурация pytest
-├── pyproject.toml        # Зависимости проекта
-└── README.md             # Документация
+├── data.json              # Данные пользователей
+├── poetry.lock            # Заблокированные версии зависимостей
+├── pyproject.toml         # Зависимости проекта
+├── pytest.ini             # Конфигурация pytest
+├── run_server.py          # Скрипт запуска сервера
+├── start_server.bat       # Батч-файл для Windows
+└── README.md              # Документация
 ```
 
 ## API Endpoints

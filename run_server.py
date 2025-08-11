@@ -1,17 +1,18 @@
 import uvicorn
 import json
 from datetime import datetime
-from src.models import User
 from src.data import users_db
 from dotenv import load_dotenv
 import os
+
+from src.models.users import User
 
 # Загружаем переменные окружения
 load_dotenv()
 
 def load_and_validate_users():
     """Загрузка и валидация пользователей из JSON файла"""
-    db_path = os.getenv("DB_PATH", "data.json")
+    db_path = os.getenv("DB_PATH", "src/data.json")
     with open(db_path, "r") as f:
         users_data = json.load(f)
     
