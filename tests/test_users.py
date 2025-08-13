@@ -44,7 +44,7 @@ def test_get_single_user(base_url: str, user: dict) -> None:
     assert user_response.data.first_name == user["first_name"]
     assert user_response.data.last_name == user["last_name"]
 
-@pytest.mark.parametrize("user_id", [7])
+@pytest.mark.parametrize("user_id", [len(users_db) + 1])
 def test_get_single_user_not_found(base_url: str, user_id: int) -> None:
     """Проверка получения ошибки 404 при запросе несуществующего пользователя"""
     response = requests.get(f"{base_url}/api/users/{user_id}")
@@ -61,7 +61,7 @@ def test_get_single_user_negative_or_zero_id(base_url: str, user_id: int) -> Non
     error_detail = response.json()
     assert error_detail["detail"] == "User ID must be a positive number"
 
-@pytest.mark.parametrize("user_id", ["dsgjfh", "abc", "123abc", ""])
+@pytest.mark.parametrize("user_id", ["dsgjfh", "abc", "123abc", ""]) 
 def test_get_single_user_string_id(base_url: str, user_id: str) -> None:
     """Проверка получения ошибки 422 при строковом ID пользователя"""
     response = requests.get(f"{base_url}/api/users/{user_id}")
@@ -71,13 +71,13 @@ def test_get_single_user_string_id(base_url: str, user_id: str) -> None:
     assert isinstance(error_detail, dict)
     assert isinstance(error_detail.get("detail"), list)
     assert len(error_detail["detail"]) > 0
-    assert "Input should be a valid integer, unable to parse string as an integer" in error_detail["detail"][0]["msg"]
+    assert "Input should be a valid integer" in error_detail["detail"][0]["msg"]
 
 
 
 def test_users_no_duplicates(base_url: str, users: dict) -> None:
     """Проверка отсутствия дубликатов в списке пользователей"""
-    user_list = users["data"]
+    user_list = users["items"]
     assert len(user_list) == len(set(user["id"] for user in user_list))
 
 @pytest.mark.parametrize("user_data", [

@@ -21,7 +21,7 @@ class TestPagination:
     def test_pagination_metadata_and_items_count(self, base_url: str, page: int, size: int, total_users: int) -> None:
         """Тест для проверки page, size, total, pages и количества элементов при заданных page и size"""
         response = requests.get(f"{base_url}/api/users", params={"page": page, "size": size})
-        
+        print('AAAAAAA', response.json())
         assert response.status_code == 200
         data = response.json()
         

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 
-ENV_PATH = Path(__file__).parent.parent / ".env"
+ENV_PATH = Path(__file__).parent.parent / ".env.example"
 
 @pytest.fixture(autouse=True)
 def load_env():

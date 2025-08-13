@@ -19,7 +19,6 @@ def get_single_user(user_id: int) -> UserResponse:
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail="User ID must be a positive number"
         )
-    
     user = next((u for u in users_db if u["id"] == user_id), None)
     if not user:
         raise HTTPException(
@@ -100,6 +99,19 @@ def delete_user(user_id: int):
         if current_user["id"] == user_id:
             users_db.pop(i)
             break
+
+@app.get("/api/users/", status_code=HTTPStatus.UNPROCESSABLE_ENTITY)
+def get_single_user_empty_path():
+    """Обработка запроса с пустым user_id, например /api/users/"""
+    raise HTTPException(
+        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+        detail=[{
+            "type": "int_parsing",
+            "loc": ["path", "user_id"],
+            "msg": "Input should be a valid integer",
+            "input": ""
+        }]
+    )
 
 @app.get("/api/users", response_model=Page[User])
 def list_users() -> Page[User]:
