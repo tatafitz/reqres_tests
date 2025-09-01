@@ -1,7 +1,7 @@
 import pytest
 import requests
 import math
-from src.data import users_db
+from app.data import users_db
 
 
 @pytest.fixture

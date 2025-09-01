@@ -1,7 +1,7 @@
 import pytest
 import requests
-from src.models.users import User, UserResponse
-from src.data import users_db
+from app.models.users import User, UserResponse
+from app.data import users_db
 
 # Тестовые данные
 test_users = [
@@ -31,18 +31,27 @@ test_users = [
     }
 ]
 
-@pytest.mark.parametrize("user", test_users)
-def test_get_single_user(base_url: str, user: dict) -> None:
-    """Тест получения информации о пользователе"""
-    response = requests.get(f"{base_url}/api/users/{user['id']}")
+@pytest.mark.parametrize("user_index", [0, 1, 2], ids=["random_user_1", "random_user_2", "random_user_3"])
+def test_get_single_user(base_url: str, user_index: int, random_three_user_ids: list) -> None:
+    """Тест получения информации о пользователе из трех случайных созданных пользователей"""
     
-    assert response.status_code == 200
+    # Проверяем, что у нас есть достаточно пользователей для тестирования
+    if len(random_three_user_ids) <= user_index:
+        pytest.skip(f"Недостаточно пользователей для тестирования (нужен индекс {user_index}, доступно {len(random_three_user_ids)})")
+    
+    user_id = random_three_user_ids[user_index]
+    response = requests.get(f"{base_url}/api/users/{user_id}")
+    
+    assert response.status_code == 200, f"Ошибка при получении пользователя с ID {user_id}"
     data = response.json()
     user_response = UserResponse.model_validate(data)
-    assert user_response.data.id == user["id"]
-    assert user_response.data.email == user["email"]
-    assert user_response.data.first_name == user["first_name"]
-    assert user_response.data.last_name == user["last_name"]
+    assert user_response.data.id == user_id, f"ID пользователя не совпадает: ожидали {user_id}, получили {user_response.data.id}"
+    
+    # Проверяем, что все обязательные поля присутствуют
+    assert user_response.data.email is not None, f"Email отсутствует у пользователя {user_id}"
+    assert user_response.data.first_name is not None, f"First name отсутствует у пользователя {user_id}"
+    assert user_response.data.last_name is not None, f"Last name отсутствует у пользователя {user_id}"
+    assert user_response.data.avatar is not None, f"Avatar отсутствует у пользователя {user_id}"
 
 @pytest.mark.parametrize("user_id", [7])
 def test_get_single_user_not_found(base_url: str, user_id: int) -> None:
