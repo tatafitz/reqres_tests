@@ -2,7 +2,8 @@ from fastapi import HTTPException
 from sqlmodel import Session, select
 from .engine import engine
 from ..models import User
-from typing import Iterable, Type
+from ..models.users import UserUpdate
+from typing import Iterable
 
 
 def get_user(user_id: int) -> User | None:
@@ -31,13 +32,17 @@ def delete_user(user_id: int):
         session.commit()
 
 
-def update_user(user_id: int, user: User) -> Type[User]:
+def update_user(user_id: int, user_update: UserUpdate) -> User:
     with Session(engine) as session:
         db_user = session.get(User, user_id)
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found")
-        user_data = user.model_dump(exclude_unset=True)
-        db_user.sqlalchemy_update(user_data)
+
+        update_data = user_update.model_dump(exclude_unset=True)
+
+        for field, value in update_data.items():
+            setattr(db_user, field, value)
+        
         session.add(db_user)
         session.commit()
         session.refresh(db_user)

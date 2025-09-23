@@ -24,7 +24,7 @@ def base_url():
     return os.getenv("BASE_URL")
 
 @pytest.fixture
-def users(base_url, fill_test_data) -> Page[User]:
+def users(base_url) -> Page[User]:
     """Получение списка пользователей"""
     response = requests.get(f"{base_url}/api/users")
     data = response.json()
@@ -48,17 +48,14 @@ def fill_test_data(base_url):
 @pytest.fixture
 def random_three_user_ids(fill_test_data):
     """Получение ID трех случайных пользователей из созданных тестовых данных"""
-    
-    # fill_test_data возвращает список созданных пользователей
+
     created_users = fill_test_data
     
     if not created_users:
         return []
-    
-    # Проверяем, что у всех пользователей есть ID
+
     valid_users = [user for user in created_users if user.get("id") is not None]
-    
-    # Если пользователей меньше или равно 3, возвращаем всех
+
     if len(valid_users) <= 3:
         return [user["id"] for user in valid_users]
 

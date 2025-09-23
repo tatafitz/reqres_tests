@@ -1,16 +1,12 @@
-from datetime import datetime
 from http import HTTPStatus
-from typing import Iterable
 
 from fastapi import APIRouter, HTTPException
-from fastapi_pagination import Page, paginate, add_pagination
+from fastapi_pagination import Page, paginate
 from app.database import users
-# from app.data import users_db
-from app.models import UserResponse, UserCreate, User
+from app.models import UserCreate, User
 from app.models.users import UserUpdate
 
 router = APIRouter(prefix="/api/users")
-
 
 
 @router.get("/{user_id}", status_code=HTTPStatus.OK)
@@ -42,63 +38,14 @@ def create_user(user_data: UserCreate) -> User:
     )
     return users.create_user(user)
 
-    # name_parts = user.name.split()
-    # first_name = name_parts[0]
-    # last_name = name_parts[1] if len(name_parts) > 1 else ""
-    #
-    # # Создаем email из имени
-    # email = f"{user.name.lower().replace(' ', '.')}@reqres.in"
-    #
-    # # Создаем URL аватара
-    # avatar = f"https://reqres.in/img/faces/{len(users_db) + 1}-image.jpg"
-    #
-    # new_user = {
-    #     "id": len(users_db) + 1,
-    #     "email": email,
-    #     "first_name": first_name,
-    #     "last_name": last_name,
-    #     "avatar": avatar,
-    #     "name": user.name,
-    #     "job": user.job,
-    #     "createdAt": datetime.now(),
-    #     "updatedAt": datetime.now()
-    # }
-    # users_db.append(new_user)
-    # return User(**new_user)
-#
-#
+
 @router.patch("/{user_id}", response_model=User, status_code=HTTPStatus.OK)
-def update_user(user_id: int, user: UserCreate) -> User:
+def update_user(user_id: int, user_update: UserUpdate) -> User:
     if user_id < 1:
         raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="User ID must be a positive number")
-    UserUpdate.model_validate(user.model_dump())
-    return users.update_user(user_id, user)
-    # user_index = None
-    # for current_user in users_db:
-    #     if current_user["id"] == user_id:
-    #         user_index = current_user
-    #         break
-    #
-    # if not user_index:
-    #     raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
-    #
-    # # Обновляем данные пользователя
-    # updated_user = {
-    #     **user_index,  # Копируем все существующие поля
-    #     "name": user.name,
-    #     "job": user.job,
-    #     "updatedAt": datetime.now()
-    # }
-    #
-    # # Находим индекс пользователя в списке для обновления
-    # for i, current_user in enumerate(users_db):
-    #     if current_user["id"] == user_id:
-    #         users_db[i] = updated_user
-    #         break
-    #
-    # return User(**updated_user)
-#
-#
+    return users.update_user(user_id, user_update)
+
+
 @router.delete("/{user_id}", status_code=HTTPStatus.NO_CONTENT)
 def delete_user(user_id: int):
     """Удаление пользователя"""
@@ -107,23 +54,8 @@ def delete_user(user_id: int):
     users.delete_user(user_id)
     return {"message": "User deleted"}
 
-    # user_index = None
-    # for current_user in users_db:
-    #     if current_user["id"] == user_id:
-    #         user_index = current_user
-    #         break
-    #
-    # if not user_index:
-    #     raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
-    #
-    # # Находим индекс пользователя в списке для удаления
-    # for i, current_user in enumerate(users_db):
-    #     if current_user["id"] == user_id:
-    #         users_db.pop(i)
-    #         break
 
-
-@router.get("/", status_code=HTTPStatus.OK)
+@router.get("/", response_model=Page[User], status_code=HTTPStatus.OK)
 def list_users() -> Page[User]:
     """Получение списка пользователей с пагинацией"""
     return paginate(users.get_users())
