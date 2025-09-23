@@ -1,16 +1,15 @@
 from fastapi import APIRouter
 
-from app.data import users_db
 from app.database.engine import check_availability
-from app.models.users import ConnectionStatus
+from app.models.app_status import AppStatus
 
 router = APIRouter()
 
-@router.get("/status", response_model=ConnectionStatus)
+@router.get("/")
+def root():
+    return {"message": "API is running"}
+
+@router.get("/status", response_model=AppStatus)
 def status():
     check_availability()
-    return ConnectionStatus(database=True)
-
-# @router.get("/")
-# def root():
-#     return {"message": "API is running"}
+    return AppStatus(database=check_availability())

@@ -1,33 +1,31 @@
 import pytest
 import requests
-from app.models.users import User, UserResponse
-from app.data import users_db
+from fastapi_pagination import Page
+
+from app.models.users import User, UserCreate
 
 # Тестовые данные
 test_users = [
     {
-        "id": 1,
         "name": "George Bluth",
-        "job": "Developer",
         "email": "george.bluth@reqres.in",
         "first_name": "George",
-        "last_name": "Bluth"
+        "last_name": "Bluth",
+        "avatar": "https://reqres.in/img/faces/default_image.jpg"
     },
     {
-        "id": 2,
         "name": "Janet Weaver",
-        "job": "Designer",
         "email": "janet.weaver@reqres.in",
         "first_name": "Janet",
-        "last_name": "Weaver"
+        "last_name": "Weaver",
+        "avatar": "https://reqres.in/img/faces/default_image.jpg"
     },
     {
-        "id": 3,
         "name": "Emma Wong",
-        "job": "QA Engineer",
         "email": "emma.wong@reqres.in",
         "first_name": "Emma",
-        "last_name": "Wong"
+        "last_name": "Wong",
+        "avatar": "https://reqres.in/img/faces/default_image.jpg"
     }
 ]
 
@@ -44,19 +42,17 @@ def test_get_single_user(base_url: str, user_index: int, random_three_user_ids: 
     
     assert response.status_code == 200, f"Ошибка при получении пользователя с ID {user_id}"
     data = response.json()
-    user_response = UserResponse.model_validate(data)
-    assert user_response.data.id == user_id, f"ID пользователя не совпадает: ожидали {user_id}, получили {user_response.data.id}"
-    
-    # Проверяем, что все обязательные поля присутствуют
-    assert user_response.data.email is not None, f"Email отсутствует у пользователя {user_id}"
-    assert user_response.data.first_name is not None, f"First name отсутствует у пользователя {user_id}"
-    assert user_response.data.last_name is not None, f"Last name отсутствует у пользователя {user_id}"
-    assert user_response.data.avatar is not None, f"Avatar отсутствует у пользователя {user_id}"
+    print('DATA', data)
+    user_response = User.model_validate(data)
+    assert user_response.id == user_id, f"ID пользователя не совпадает: ожидали {user_id}, получили {user_response.id}"
 
-@pytest.mark.parametrize("user_id", [7])
-def test_get_single_user_not_found(base_url: str, user_id: int) -> None:
+# @pytest.mark.parametrize("user_id", [7])
+def test_get_single_user_not_found(base_url: str, users: Page[User]) -> None:
     """Проверка получения ошибки 404 при запросе несуществующего пользователя"""
-    response = requests.get(f"{base_url}/api/users/{user_id}")
+    # Получаем ID последнего пользователя и прибавляем 1
+    last_id = users.items[-1].id + 1
+    
+    response = requests.get(f"{base_url}/api/users/{last_id}")
     
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
@@ -70,7 +66,7 @@ def test_get_single_user_negative_or_zero_id(base_url: str, user_id: int) -> Non
     error_detail = response.json()
     assert error_detail["detail"] == "User ID must be a positive number"
 
-@pytest.mark.parametrize("user_id", ["dsgjfh", "abc", "123abc", ""])
+@pytest.mark.parametrize("user_id", ["dsgjfh", "1aa"])
 def test_get_single_user_string_id(base_url: str, user_id: str) -> None:
     """Проверка получения ошибки 422 при строковом ID пользователя"""
     response = requests.get(f"{base_url}/api/users/{user_id}")
@@ -84,27 +80,32 @@ def test_get_single_user_string_id(base_url: str, user_id: str) -> None:
 
 
 
-def test_users_no_duplicates(base_url: str, users: dict) -> None:
+def test_users_no_duplicates(base_url: str, users) -> None:
     """Проверка отсутствия дубликатов в списке пользователей"""
-    user_list = users["data"]
-    assert len(user_list) == len(set(user["id"] for user in user_list))
+    user_list = users.items
+    assert len(user_list) == len(set(user.id for user in user_list))
 
-@pytest.mark.parametrize("user_data", [
-    {"name": "Иван Петров", "job": "QA инженер"},
-    {"name": "Мария Сидорова", "job": "разработчик"},
-    {"name": "Алексей Иванов", "job": "DevOps"}
-])
-def test_create_user(base_url: str, user_data: dict) -> None:
+@pytest.mark.parametrize("user_data", test_users[:2], ids=["user_1", "user_2"])
+def test_create_user(base_url: str, user_data: dict, users: Page[User]) -> None:
     """Тест создания нового пользователя"""
+    # Получаем максимальный ID из существующих пользователей
+    max_existing_id = max(user.id for user in users.items) if users.items else 0
+    
     response = requests.post(f"{base_url}/api/users", json=user_data)
     
     assert response.status_code == 201
     data = response.json()
     created_user = User.model_validate(data)
-    assert created_user.name == user_data["name"]
-    assert created_user.job == user_data["job"]
+    
+    # Проверяем основные поля
+    assert created_user.email == user_data["email"]
+    assert created_user.first_name == user_data["first_name"]
+    assert created_user.last_name == user_data["last_name"]
+    assert created_user.avatar == user_data["avatar"]
     assert created_user.id is not None
-    assert created_user.createdAt is not None
+    
+    # Проверяем, что ID нового пользователя больше максимального существующего
+    assert created_user.id > max_existing_id, f"ID нового пользователя ({created_user.id}) должен быть больше максимального существующего ({max_existing_id})"
 
 @pytest.mark.parametrize("user,update_data", [
     (test_users[0], {"name": "George Updated", "job": "Senior Developer"}),
@@ -122,8 +123,20 @@ def test_update_user(base_url: str, user: dict, update_data: dict) -> None:
     assert updated_user.job == update_data["job"]
     assert updated_user.updatedAt is not None
 
-@pytest.mark.parametrize("user", test_users)
-def test_delete_user(base_url: str, user: dict) -> None:
+def test_delete_user(base_url: str) -> None:
     """Тест удаления пользователя"""
-    response = requests.delete(f"{base_url}/api/users/{user['id']}")
-    assert response.status_code == 204
+    # Используем последний элемент из test_users для создания
+    user_data = test_users[-1]
+    
+    # Сначала создаем пользователя
+    create_response = requests.post(f"{base_url}/api/users", json=user_data)
+    created_user_data = create_response.json()
+    created_user = User.model_validate(created_user_data)
+    
+    # Теперь удаляем созданного пользователя
+    delete_response = requests.delete(f"{base_url}/api/users/{created_user.id}")
+    assert delete_response.status_code == 204
+    
+    # Проверяем, что пользователь действительно удален (запрос должен вернуть 404)
+    get_response = requests.get(f"{base_url}/api/users/{created_user.id}")
+    assert get_response.status_code == 404

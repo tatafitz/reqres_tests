@@ -13,8 +13,8 @@ router = APIRouter(prefix="/api/users")
 
 
 
-@router.get("/{user_id}", response_model=UserResponse)
-def get_single_user(user_id: int) -> UserResponse:
+@router.get("/{user_id}", status_code=HTTPStatus.OK)
+def get_single_user(user_id: int) -> User:
     """Получение информации о конкретном пользователе"""
     if user_id <= 0:
         raise HTTPException(
@@ -28,13 +28,12 @@ def get_single_user(user_id: int) -> UserResponse:
             status_code=HTTPStatus.NOT_FOUND,
             detail="User not found"
         )
-    return UserResponse(data=user)
+    return user
 
 
 @router.post("/", response_model=User, status_code=HTTPStatus.CREATED)
 def create_user(user_data: UserCreate) -> User:
     """Создание нового пользователя"""
-    # Создаем объект User без ID (будет назначен автоматически)
     user = User(
         email=user_data.email,
         first_name=user_data.first_name,
@@ -106,7 +105,7 @@ def delete_user(user_id: int):
     if user_id < 1:
         raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="User ID must be a positive number")
     users.delete_user(user_id)
-    return {"message":"User deleted"}
+    return {"message": "User deleted"}
 
     # user_index = None
     # for current_user in users_db:
@@ -124,7 +123,7 @@ def delete_user(user_id: int):
     #         break
 
 
-@router.get("/", response_model=Page[User])
-def list_users() -> Iterable[User]:
+@router.get("/", status_code=HTTPStatus.OK)
+def list_users() -> Page[User]:
     """Получение списка пользователей с пагинацией"""
     return paginate(users.get_users())

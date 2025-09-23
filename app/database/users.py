@@ -1,27 +1,28 @@
-# from clickhouse_sqlalchemy.drivers.http.exceptions import HTTPException
 from fastapi import HTTPException
 from sqlmodel import Session, select
 from .engine import engine
 from ..models import User
-from typing import Iterable
+from typing import Iterable, Type
 
 
 def get_user(user_id: int) -> User | None:
     with Session(engine) as session:
         return session.get(User, user_id)
 
+
 def get_users() -> Iterable[User]:
     with Session(engine) as session:
         statement = select(User)
         return session.exec(statement).all()
 
+
 def create_user(user: User) -> User:
     with Session(engine) as session:
-        # Если ID не указан, SQLModel сам его сгенерирует
         session.add(user)
         session.commit()
         session.refresh(user)
         return user
+
 
 def delete_user(user_id: int):
     with Session(engine) as session:
@@ -29,7 +30,8 @@ def delete_user(user_id: int):
         session.delete(user)
         session.commit()
 
-def update_user(user_id: int, user: User) -> User:
+
+def update_user(user_id: int, user: User) -> Type[User]:
     with Session(engine) as session:
         db_user = session.get(User, user_id)
         if not db_user:

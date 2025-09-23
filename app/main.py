@@ -1,11 +1,15 @@
 import dotenv
-dotenv.load_dotenv()
+from pathlib import Path
 
+# # Загружаем переменные окружения из .env
+# env_path = Path(__file__).parent.parent / ".env"
+# dotenv.load_dotenv(env_path)
+dotenv.load_dotenv()
 
 import sys
 import os
 
-# Добавляем корень проекта в Python path для IDE
+
 if __name__ == "__main__":
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if project_root not in sys.path:
@@ -25,7 +29,4 @@ add_pagination(app)
 
 if __name__ == "__main__":
     create_db_and_tables()
-    # base_url = os.getenv("BASE_URL", "http://127.0.0.1:8000")
-    # host = base_url.split("://")[1].split(":")[0]
-    # port = int(base_url.split(":")[-1])
     uvicorn.run("app.main:app", host="localhost", port=8002)

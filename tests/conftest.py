@@ -5,36 +5,42 @@ import os
 import requests
 from dotenv import load_dotenv
 from pathlib import Path
+import random
 
+from fastapi_pagination import Page
+
+from app.models import User
 
 ENV_PATH = Path(__file__).parent.parent / ".env"
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def load_env():
-    """Загрузка переменных окружения перед каждым тестом"""
+    """Загрузка переменных окружения один раз за сессию тестов"""
     load_dotenv(ENV_PATH)
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def base_url():
     """Базовый URL для API"""
     return os.getenv("BASE_URL")
 
 @pytest.fixture
-def users(base_url):
+def users(base_url, fill_test_data) -> Page[User]:
     """Получение списка пользователей"""
     response = requests.get(f"{base_url}/api/users")
-    return response.json()
+    data = response.json()
+    return Page[User].model_validate(data)
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def fill_test_data(base_url):
-    with open("app/data.json") as f:
+    data_file_path = Path(__file__).parent.parent / "app" / "data.json"
+    with open(data_file_path) as f:
         test_data_users = json.load(f)
         api_users = []
     for user in test_data_users:
         response = requests.post(f"{base_url}/api/users/", json=user)
         api_users.append(response.json())
 
-    yield api_users  # Возвращаем созданных пользователей
+    yield api_users
 
     for user in api_users:
         requests.delete(f"{base_url}/api/users/{user['id']}")
@@ -42,7 +48,6 @@ def fill_test_data(base_url):
 @pytest.fixture
 def random_three_user_ids(fill_test_data):
     """Получение ID трех случайных пользователей из созданных тестовых данных"""
-    import random
     
     # fill_test_data возвращает список созданных пользователей
     created_users = fill_test_data
@@ -53,15 +58,9 @@ def random_three_user_ids(fill_test_data):
     # Проверяем, что у всех пользователей есть ID
     valid_users = [user for user in created_users if user.get("id") is not None]
     
-    if not valid_users:
-        return []
-    
     # Если пользователей меньше или равно 3, возвращаем всех
     if len(valid_users) <= 3:
         return [user["id"] for user in valid_users]
-    
-    # Выбираем 3 случайных пользователя
-    # Используем фиксированный seed для воспроизводимости (опционально)
-    # random.seed(42)  # Раскомментируйте для детерминированных результатов
+
     random_users = random.sample(valid_users, 3)
     return [user["id"] for user in random_users]

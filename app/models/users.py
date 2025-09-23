@@ -53,9 +53,9 @@ class UserCreate(BaseModel):
             return self.__dict__
     
 
-
-class UserResponse(BaseModel):
-    data: User
+#
+# class UserResponse(BaseModel):
+#     data: User
 
 class UserListResponse(PaginatedResponse[User]):
     pass 

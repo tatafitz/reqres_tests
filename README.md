@@ -49,19 +49,33 @@ curl -sSL https://install.python-poetry.org | python3 -
 poetry install
 ```
 
-3. Запустите API сервер:
+3. Настройте переменные окружения:
 ```bash
-# Windows
-start_server.bat
+# Скопируйте файл с примером переменных окружения
+cp env.sample .env
 
-# Linux/Mac
-poetry run python run_server.py
+# Отредактируйте .env при необходимости
 ```
 
-4. В другом терминале запустите тесты:
+4. Запустите API сервер:
+```bash
+poetry run python app/main.py
+```
+
+5. В другом терминале запустите тесты:
 ```bash
 poetry run pytest
 ```
+
+## Переменные окружения
+
+Проект использует следующие переменные окружения (определены в `.env`):
+
+- `BASE_URL` - базовый URL для API (по умолчанию: http://localhost:8002)
+- `DATABASE_ENGINE` - строка подключения к базе данных PostgreSQL
+- `DATABASE_POOL_SIZE` - размер пула соединений с базой данных (по умолчанию: 10)
+
+Переменные PostgreSQL (POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST_AUTH_METHOD) определяются в `docker-compose.yml` и не требуют настройки в `.env`.
 
 ## Тесты
 

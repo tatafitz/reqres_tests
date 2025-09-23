@@ -1,13 +1,9 @@
 import pytest
 import requests
 import math
-from app.data import users_db
 
-
-@pytest.fixture
-def total_users() -> int:
-    """Получение пользователей"""
-    return len(users_db)
+from fastapi_pagination import Page
+from app.models import User
 
 
 class TestPagination:
@@ -18,8 +14,9 @@ class TestPagination:
         (1, 10),
         (3, 2),
     ])
-    def test_pagination_metadata_and_items_count(self, base_url: str, page: int, size: int, total_users: int) -> None:
+    def test_pagination_metadata_and_items_count(self, base_url: str, page: int, size: int, users: Page[User]) -> None:
         """Тест для проверки page, size, total, pages и количества элементов при заданных page и size"""
+        total_users = len(users.items)
         response = requests.get(f"{base_url}/api/users", params={"page": page, "size": size})
         
         assert response.status_code == 200
@@ -38,8 +35,9 @@ class TestPagination:
         assert len(data["items"]) == expected_items_count
     
     @pytest.mark.parametrize("size", [1, 2, 3, 5, 10, 15])
-    def test_pages_calculation_different_sizes(self, base_url: str, size: int, total_users: int) -> None:
+    def test_pages_calculation_different_sizes(self, base_url: str, size: int, users: Page[User]) -> None:
         """Тест для проверки pages при разных size"""
+        total_users = len(users.items)
         response = requests.get(f"{base_url}/api/users", params={"page": 1, "size": size})
         
         assert response.status_code == 200
@@ -48,7 +46,7 @@ class TestPagination:
         expected_pages = math.ceil(total_users / size)
         assert data["pages"] == expected_pages
     
-    def test_different_pages_return_different_data(self, base_url: str, total_users: int) -> None:
+    def test_different_pages_return_different_data(self, base_url: str) -> None:
         """Тест, в котором возвращаются разные данные при разных значениях page"""
         size = 3
 
@@ -66,9 +64,10 @@ class TestPagination:
         
         assert not ids_page1.intersection(ids_page2), "Страницы не должны содержать одинаковые элементы"
     
-    def test_last_page_partial_fill(self, base_url: str, total_users: int) -> None:
+    def test_last_page_partial_fill(self, base_url: str, users: Page[User]) -> None:
         """Тест для проверки остатка на последней странице"""
         size = 3
+        total_users = len(users.items)
         total_pages = math.ceil(total_users / size)
 
         if total_users % size == 0:
@@ -82,8 +81,9 @@ class TestPagination:
         expected_items_on_last_page = total_users % size
         assert len(data["items"]) == expected_items_on_last_page
     
-    def test_empty_page_beyond_last(self, base_url: str, total_users: int) -> None:
+    def test_empty_page_beyond_last(self, base_url: str, users: Page[User]) -> None:
         """Тест запроса страницы за пределами последней"""
+        total_users = len(users.items)
         size = 3
         total_pages = math.ceil(total_users / size)
         empty_page = total_pages + 1
