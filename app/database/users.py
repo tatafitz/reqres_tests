@@ -1,9 +1,11 @@
+from collections.abc import Iterable
+
 from fastapi import HTTPException
 from sqlmodel import Session, select
-from .engine import engine
-from ..models import User
-from ..models.users import UserUpdate
-from typing import Iterable
+
+from app.database.engine import engine
+from app.models import User
+from app.models.users import UserUpdate
 
 
 def get_user(user_id: int) -> User | None:
@@ -42,7 +44,7 @@ def update_user(user_id: int, user_update: UserUpdate) -> User:
 
         for field, value in update_data.items():
             setattr(db_user, field, value)
-        
+
         session.add(db_user)
         session.commit()
         session.refresh(db_user)

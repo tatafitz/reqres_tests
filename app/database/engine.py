@@ -1,8 +1,10 @@
 import os
-from sqlalchemy.orm import Session
-from sqlmodel import create_engine, SQLModel, text, Session
 
-engine = create_engine(os.getenv("DATABASE_ENGINE"), pool_size=int(os.getenv("DATABASE_POOL_SIZE")))
+from sqlmodel import Session, SQLModel, create_engine, text
+
+engine = create_engine(
+    os.getenv("DATABASE_ENGINE"), pool_size=int(os.getenv("DATABASE_POOL_SIZE"))
+)
 
 
 def create_db_and_tables():

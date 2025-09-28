@@ -86,9 +86,74 @@ poetry run pytest
 - Тестирование удаления пользователей
 - Тестирование пагинации списка пользователей
 
+## Линтинг и форматирование
+
+Проект использует **ruff** для линтинга и форматирования кода.
+
+### Основные команды ruff:
+
+```bash
+# Проверка всего проекта на ошибки
+poetry run ruff check .
+
+# Автоматическое исправление ошибок
+poetry run ruff check . --fix
+
+# Форматирование кода
+poetry run ruff format .
+
+# Проверка конкретной папки
+poetry run ruff check app/
+poetry run ruff check tests/
+
+# Проверка конкретного файла
+poetry run ruff check app/main.py
+
+# Проверка с показом всех исправлений
+poetry run ruff check . --show-fixes
+
+# Проверка с показом статистики
+poetry run ruff check . --statistics
+```
+
+### Полезные команды:
+
+```bash
+# Показать все доступные правила
+poetry run ruff rule --all
+
+# Показать информацию о конкретном правиле
+poetry run ruff rule E501
+
+# Проверка с игнорированием конкретных правил
+poetry run ruff check . --ignore E501,W503
+
+# Проверка только с определенными правилами
+poetry run ruff check . --select E,W,F
+
+# Проверка с автоисправлением и форматированием
+poetry run ruff check . --fix && poetry run ruff format .
+```
+
+### Примеры использования:
+
+```bash
+# Ежедневная проверка проекта
+poetry run ruff check . --fix
+poetry run ruff format .
+
+# Перед коммитом
+poetry run ruff check app/ tests/ --fix
+poetry run ruff format app/ tests/
+
+# Проверка только тестов
+poetry run ruff check tests/ --fix
+```
+
 ## Технологии
 
 - FastAPI - фреймворк для создания API
 - Pydantic - валидация данных
 - pytest - фреймворк для тестирования
-- Poetry - управление зависимостями 
+- Poetry - управление зависимостями
+- ruff - линтинг и форматирование кода

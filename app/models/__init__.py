@@ -1,3 +1,3 @@
-from .users import User, UserCreate, UserListResponse
+from app.models.users import User, UserCreate
 
-__all__ = ['User', 'UserCreate', 'UserListResponse']
+__all__ = ["User", "UserCreate"]

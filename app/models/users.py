@@ -1,8 +1,6 @@
 from pydantic import BaseModel, EmailStr, HttpUrl
 from sqlmodel import Field, SQLModel
 
-from .pagination import PaginatedResponse
-
 
 class ConnectionStatus(BaseModel):
     database: bool
@@ -33,7 +31,3 @@ class UserCreate(BaseModel):
     first_name: str
     last_name: str
     avatar: HttpUrl
-
-
-class UserListResponse(PaginatedResponse[User]):
-    pass

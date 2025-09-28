@@ -2,8 +2,9 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, HTTPException
 from fastapi_pagination import Page, paginate
+
 from app.database import users
-from app.models import UserCreate, User
+from app.models import User, UserCreate
 from app.models.users import UserUpdate
 
 router = APIRouter(prefix="/api/users")
@@ -15,15 +16,12 @@ def get_single_user(user_id: int) -> User:
     if user_id <= 0:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="User ID must be a positive number"
+            detail="User ID must be a positive number",
         )
 
     user = users.get_user(user_id)
     if not user:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
     return user
 
 
@@ -34,7 +32,7 @@ def create_user(user_data: UserCreate) -> User:
         email=user_data.email,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
-        avatar=str(user_data.avatar)
+        avatar=str(user_data.avatar),
     )
     return users.create_user(user)
 
@@ -42,7 +40,10 @@ def create_user(user_data: UserCreate) -> User:
 @router.patch("/{user_id}", response_model=User, status_code=HTTPStatus.OK)
 def update_user(user_id: int, user_update: UserUpdate) -> User:
     if user_id < 1:
-        raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="User ID must be a positive number")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="User ID must be a positive number",
+        )
     return users.update_user(user_id, user_update)
 
 
@@ -50,7 +51,10 @@ def update_user(user_id: int, user_update: UserUpdate) -> User:
 def delete_user(user_id: int):
     """Удаление пользователя"""
     if user_id < 1:
-        raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="User ID must be a positive number")
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="User ID must be a positive number",
+        )
     users.delete_user(user_id)
     return {"message": "User deleted"}
 

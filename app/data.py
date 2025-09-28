@@ -1,6 +1,5 @@
 from datetime import datetime
 
-# Имитация базы данных
 users_db = [
     {
         "id": 1,
@@ -10,7 +9,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/1-image.jpg",
         "name": "George Bluth",
         "job": "Developer",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 2,
@@ -20,7 +19,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/2-image.jpg",
         "name": "Janet Weaver",
         "job": "Designer",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 3,
@@ -30,7 +29,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/3-image.jpg",
         "name": "Emma Wong",
         "job": "QA Engineer",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 4,
@@ -40,7 +39,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/4-image.jpg",
         "name": "Eve Holt",
         "job": "Product Manager",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 5,
@@ -50,7 +49,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/5-image.jpg",
         "name": "Charles Morris",
         "job": "DevOps Engineer",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 6,
@@ -60,7 +59,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/6-image.jpg",
         "name": "Tracey Ramos",
         "job": "UX Designer",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 7,
@@ -70,7 +69,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/7-image.jpg",
         "name": "Michael Lawson",
         "job": "Frontend Developer",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 8,
@@ -80,7 +79,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/8-image.jpg",
         "name": "Lindsay Ferguson",
         "job": "Backend Developer",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 9,
@@ -90,7 +89,7 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/9-image.jpg",
         "name": "Tobias Funke",
         "job": "Full Stack Developer",
-        "createdAt": datetime.now()
+        "createdAt": datetime.now(),
     },
     {
         "id": 10,
@@ -100,6 +99,6 @@ users_db = [
         "avatar": "https://reqres.in/img/faces/10-image.jpg",
         "name": "Byron Fields",
         "job": "System Administrator",
-        "createdAt": datetime.now()
-    }
-] 
+        "createdAt": datetime.now(),
+    },
+]
