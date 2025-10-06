@@ -193,3 +193,4 @@ docker compose logs <service_name>
 # Или логи конкретного контейнера
 docker logs <container_name>
 ```
+

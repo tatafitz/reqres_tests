@@ -40,10 +40,10 @@ test_users = [
     "user_index", [0, 1, 2], ids=["random_user_1", "random_user_2", "random_user_3"]
 )
 def test_get_single_user(
-    base_url: str, user_index: int, random_three_user_ids: list
+    service_1, user_index: int, random_three_user_ids: list
 ) -> None:
     user_id = random_three_user_ids[user_index]
-    response = requests.get(f"{base_url}/api/users/{user_id}")
+    response = service_1.fetch_user_by_id(user_id)
 
     assert response.status_code == 200
     user_response = User.model_validate(response.json())
@@ -92,12 +92,12 @@ def test_users_no_duplicates(base_url: str, users) -> None:
 
 
 @pytest.mark.parametrize("user_data", test_users[:2], ids=["user_1", "user_2"])
-def test_create_user(base_url: str, user_data: dict, users: Page[User]) -> None:
+def test_create_user(service_1, user_data: dict, users: Page[User]) -> None:
     """Тест создания нового пользователя"""
 
     max_existing_id = max(user.id for user in users.items) if users.items else 0
 
-    response = requests.post(f"{base_url}/api/users", json=user_data)
+    response = service_1.create_new_user(user_data)
 
     assert response.status_code == 201
     created_user = User.model_validate(response.json())
@@ -111,7 +111,7 @@ def test_create_user(base_url: str, user_data: dict, users: Page[User]) -> None:
         f"ID нового пользователя {created_user.id}"
         f" должен быть больше id последней записи {max_existing_id}"
     )
-    requests.delete(f"{base_url}/api/users/{created_user.id}")
+    service_1.remove_user(created_user.id)
 
 
 @pytest.mark.parametrize(
@@ -120,7 +120,7 @@ def test_create_user(base_url: str, user_data: dict, users: Page[User]) -> None:
     ids=["update_email", "update_first_name", "update_last_name"],
 )
 def test_update_user_patch(
-    base_url: str, field_to_update: str, user_index: int, fill_test_data: list
+    service_1, field_to_update: str, user_index: int, fill_test_data: list
 ) -> None:
     """Тест обновления пользователя с параметризацией"""
     user_id = fill_test_data[user_index]["id"]
@@ -128,11 +128,11 @@ def test_update_user_patch(
     original_value = original_user_data[field_to_update]
     update_data = {field_to_update: f"updated_{original_value}"}
 
-    patch_response = requests.patch(f"{base_url}/api/users/{user_id}", json=update_data)
+    patch_response = service_1.update_user_partial(user_id, update_data)
 
     User.model_validate(patch_response.json())
     assert patch_response.status_code == 200
-    new_user_data = requests.get(f"{base_url}/api/users/{user_id}").json()
+    new_user_data = service_1.fetch_user_by_id(user_id).json()
 
     expected_value = f"updated_{original_value}"
     assert new_user_data[field_to_update] == expected_value
@@ -142,12 +142,12 @@ def test_update_user_patch(
     assert new_user_data["id"] == user_id
 
 
-def test_delete_user(base_url: str, fill_test_data: list) -> None:
+def test_delete_user(service_1, fill_test_data: list) -> None:
     """Тест удаления пользователя"""
     user_id = fill_test_data[-1]["id"]
 
-    delete_response = requests.delete(f"{base_url}/api/users/{user_id}")
-    get_response = requests.get(f"{base_url}/api/users/{user_id}")
+    delete_response = service_1.remove_user(user_id)
+    get_response = service_1.fetch_user_by_id(user_id)
 
     assert delete_response.status_code == 204
     assert get_response.status_code == 404

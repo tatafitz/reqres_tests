@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from fastapi_pagination import Page
 
 from app.models import User
+pytest_plugins = ['fixture_sessions']
 
 ENV_PATH = Path(__file__).parent.parent / ".env"
 
@@ -23,6 +24,15 @@ def load_env():
 def base_url():
     """Базовый URL для API"""
     return os.getenv("BASE_URL")
+
+
+def pytest_addoption(parser):
+    parser.addoption("--env", default="dev")
+
+
+@pytest.fixture(scope="session")
+def env(request):
+    return request.config.getoption("--env")
 
 
 @pytest.fixture
